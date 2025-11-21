@@ -1,0 +1,15 @@
+---
+- hosts: all
+  become: true
+  tasks:
+    - name: Install apache2 package
+      apt:
+        name: apache2
+        state: latest
+      when: ansible_distribution == "Ubuntu"
+
+    - name: Install apache for CentOS
+      dnf:
+        name: httpd
+        state: latest
+      when: ansible_distribution == "CentOS"
