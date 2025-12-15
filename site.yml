@@ -18,6 +18,51 @@
       when: ansible_distribution == "Ubuntu"
 
 
+- hosts: all
+  become: true
+  tasks:
+
+  - name: create Simone user
+    tags: always
+    user:
+      name: simone
+      group: root
+  
+  - name: add ssh key for simone
+    tags: always
+    authorized_key:
+      user: simone
+      key: ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIHpAR3g71JtopzUu16dC410m5r+OsqG9HelWcDdZhV5c Ansible's key
+
+  - name: add sudoers file for simone
+    tags: always
+    copy: 
+      src: sudoer_simone
+      dest: /etc/sudoers.d/simone
+      owner: root
+      group: root
+      mode: 0440 
+
+
+
+- hosts: workstations
+  become: true
+  tasks:
+
+   - name: install unzip
+     package: 
+      name: unzip
+
+   - name: install terraform
+     unarchive:
+       src: https://releases.hashicorp.com/terraform/1.14.0/terraform_1.14.0_linux_amd64.zip
+       dest: /usr/local/bin
+       remote_src: yes
+       mode: 0755
+       owner: root
+       group: root
+
+
 - hosts: web_servers
   become: true
   tasks:
@@ -39,6 +84,24 @@
           - php
         state: latest
       when: ansible_distribution == "CentOS"
+
+    - name: start httpd (CentOS)
+      tags: apache, centtos, httpd
+      service: 
+        name: httpd
+        state: started
+        enabled: yes
+      when: ansible_distribution == "CentOS"
+
+
+    - name: copy default html file for site
+      tags: apache, apache2, httpd
+      copy:
+        src: Ans_files/default_site.html
+        dest: /var/www/html/test.html
+        owner: root
+        group: root
+        mode: 0644
 
 
 - hosts: db_servers
